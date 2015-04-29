@@ -11,6 +11,7 @@ struct Models
 	Vocab *tgt_vocab;
 	RuleTable *ruletable;
 	LanguageModel *lm_model;
+	set<int> *src_function_words;
 };
 
 class SentenceTranslator
@@ -40,6 +41,7 @@ class SentenceTranslator
 		Vocab *tgt_vocab;
 		RuleTable *ruletable;
 		LanguageModel *lm_model;
+		set<int> *src_function_words;
 		Parameter para;
 		Weight feature_weight;
 

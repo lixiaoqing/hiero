@@ -6,6 +6,7 @@ SentenceTranslator::SentenceTranslator(const Models &i_models, const Parameter &
 	tgt_vocab = i_models.tgt_vocab;
 	ruletable = i_models.ruletable;
 	lm_model = i_models.lm_model;
+	src_function_words = i_models.src_function_words;
 	para = i_para;
 	feature_weight = i_weight;
 
@@ -138,6 +139,8 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 					for (int len_X=0;len_X<beg_A && len_X+len_A+2<=SPAN_LEN_MAX;len_X++)
 					{
 						int beg_X = beg_A - len_X - 1;
+						if (src_function_words->find(src_wids.at(beg_X)) != src_function_words->end())						//遇到虚词，结束循环
+							break;
 						pair<int,int> span = make_pair(beg_X,len_X+len_A+1);
 						pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 						pair<int,int> span_src_x2 = make_pair(-1,-1);
@@ -157,6 +160,8 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 					for (int len_X=0;beg_A+len_A+1+len_X<src_sen_len && len_A+len_X+2<=SPAN_LEN_MAX;len_X++)
 					{
 						int beg_X = beg_A + len_A + 1;
+						if (src_function_words->find(src_wids.at(beg_X+len_X)) != src_function_words->end())					//遇到虚词，结束循环
+							break;
 						pair<int,int> span = make_pair(beg_A,len_A+len_X+1);
 						pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 						pair<int,int> span_src_x2 = make_pair(-1,-1);
@@ -176,10 +181,14 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 				{
 					for (int len_X1=0;len_X1<beg_A && len_X1+len_A+2<=SPAN_LEN_MAX-1;len_X1++)
 					{
+						int beg_X1 = beg_A - len_X1 - 1;
+						if (src_function_words->find(src_wids.at(beg_X1)) != src_function_words->end())						//遇到虚词，结束循环
+							break;
 						for (int len_X2=0;beg_A+len_A+1+len_X2<src_sen_len && len_X1+len_A+len_X2<=SPAN_LEN_MAX;len_X2++)
 						{
-							int beg_X1 = beg_A - len_X1 - 1;
 							int beg_X2 = beg_A + len_A + 1;
+							if (src_function_words->find(src_wids.at(beg_X2)) != src_function_words->end())					//遇到虚词，结束循环
+								break;
 							pair<int,int> span = make_pair(beg_X1,len_X1+len_A+len_X2+2);
 							pair<int,int> span_src_x1 = make_pair(beg_X1,len_X1);
 							pair<int,int> span_src_x2 = make_pair(beg_X2,len_X2);
@@ -208,6 +217,8 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 			{
 				for (int len_X=0;beg_X+len_X<beg_AXB+len_AXB;len_X++)
 				{
+					if (src_function_words->find(src_wids.at(beg_X+len_X)) != src_function_words->end())					//遇到虚词，结束循环
+						break;
 					vector<int> ids_AXB(src_wids.begin()+beg_AXB,src_wids.begin()+beg_X);
 					ids_AXB.push_back(src_nt_id);
 					ids_AXB.insert(ids_AXB.end(),src_wids.begin()+beg_X+len_X+1,src_wids.begin()+beg_AXB+len_AXB+1);
@@ -223,6 +234,8 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 							for (int len_X1=0;len_X1<beg_AXB && len_X1+len_AXB+2<=SPAN_LEN_MAX;len_X1++)
 							{
 								int beg_X1 = beg_AXB - len_X1 - 1;
+								if (src_function_words->find(src_wids.at(beg_X1)) != src_function_words->end())		//遇到虚词，结束循环
+									break;
 								pair<int,int> span = make_pair(beg_X1,len_X1+len_AXB+1);
 								pair<int,int> span_src_x1 = make_pair(beg_X1,len_X1);
 								pair<int,int> span_src_x2 = make_pair(beg_X,len_X);
@@ -242,6 +255,8 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 							for (int len_X2=0;beg_AXB+len_AXB+1+len_X2<src_sen_len && len_AXB+len_X2+2<=SPAN_LEN_MAX;len_X2++)
 							{
 								int beg_X2 = beg_AXB + len_AXB + 1;
+								if (src_function_words->find(src_wids.at(beg_X2+len_X2)) != src_function_words->end())		//遇到虚词，结束循环
+									break;
 								pair<int,int> span = make_pair(beg_AXB,len_AXB+len_X2+1);
 								pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 								pair<int,int> span_src_x2 = make_pair(beg_X2,len_X2);
@@ -282,8 +297,12 @@ void SentenceTranslator::fill_span2rules_with_AXBXC_rule()
 				{
 					for (int beg_B=beg_XBX+1;beg_B<beg_XBX+len_XBX;beg_B++)
 					{
-						for (int len_B=0;len_B<len_XBX-(beg_B-beg_XBX);len_B++)
+						if (src_function_words->find(src_wids.at(beg_B-1)) != src_function_words->end())				//遇到虚词，结束循环
+							break;
+						for (int len_B=len_XBX+beg_XBX-beg_B-1;len_B>=0;len_B--)
 						{
+							if (src_function_words->find(src_wids.at(beg_B+len_B+1)) != src_function_words->end())		//遇到虚词，结束循环
+								break;
 							//抽取形如AXBXC的pattern
 							vector<int> ids_AXBXC(src_wids.begin()+beg_AXBXC,src_wids.begin()+beg_XBX);
 							ids_AXBXC.push_back(src_nt_id);

@@ -53,6 +53,7 @@ struct Filenames
 	string tgt_vocab_file;
 	string rule_table_file;
 	string lm_file;
+	string fw_file;
 };
 
 struct Parameter

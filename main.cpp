@@ -48,6 +48,11 @@ void read_config(Filenames &fns,Parameter &para, Weight &weight, const string &c
 			getline(fin,line);
 			fns.lm_file = line;
 		}
+		else if (line == "[function-words-file]")
+		{
+			getline(fin,line);
+			fns.fw_file = line;
+		}
 		else if (line == "[BEAM-SIZE]")
 		{
 			getline(fin,line);
@@ -239,6 +244,22 @@ void translate_file(const Models &models, const Parameter &para, const Weight &w
 	}
 }
 
+void load_function_words(set<int> &src_function_words,const string &function_words_file,Vocab *src_vocab)
+{
+	ifstream fin(function_words_file.c_str());
+	if (!fin.is_open())
+	{
+		cerr<<"cannot open function words file!\n";
+		return;
+	}
+	string line;
+	while(getline(fin,line))
+	{
+		TrimLine(line);
+		src_function_words.insert(src_vocab->get_id(line));
+	}
+}
+
 int main( int argc, char *argv[])
 {
 	clock_t a,b;
@@ -254,11 +275,13 @@ int main( int argc, char *argv[])
 	Vocab *tgt_vocab = new Vocab(fns.tgt_vocab_file);
 	RuleTable *ruletable = new RuleTable(para.RULE_NUM_LIMIT,weight,fns.rule_table_file);
 	LanguageModel *lm_model = new LanguageModel(fns.lm_file,tgt_vocab);
+	set<int> src_function_words;
+	load_function_words(src_function_words,fns.fw_file,src_vocab);
 
 	b = clock();
 	cout<<"loading time: "<<double(b-a)/CLOCKS_PER_SEC<<endl;
 
-	Models models = {src_vocab,tgt_vocab,ruletable,lm_model};
+	Models models = {src_vocab,tgt_vocab,ruletable,lm_model,&src_function_words};
 	translate_file(models,para,weight,fns.input_file,fns.output_file);
 	b = clock();
 	cout<<"time cost: "<<double(b-a)/CLOCKS_PER_SEC<<endl;
