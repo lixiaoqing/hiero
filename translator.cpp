@@ -336,17 +336,20 @@ void SentenceTranslator::fill_span2rules_with_glue_rule()
 	vector<int> ids_X1X2 = {src_nt_id,src_nt_id};
 	vector<vector<TgtRule>* > matched_rules_for_prefixes = ruletable->find_matched_rules_for_prefixes(ids_X1X2,0);
 	//assert(matched_rules_for_prefixes.size() == 2 && matched_rules_for_prefixes.back() != NULL);
-	for (int len_X1X2=1;len_X1X2<src_sen_len;len_X1X2++)                      //glue pattern的跨度不受规则最大跨度RULE_LEN_MAX的限制，可以延伸到句尾
+	for (int beg_X1X2=0;beg_X1X2+1<src_sen_len;beg_X1X2++)				  //使用不以句首为起始位置的glue规则
 	{
-		for (int len_X1=0;len_X1<len_X1X2;len_X1++)
+		for (int len_X1X2=1;beg+X1X2+len_X1X2<src_sen_len;len_X1X2++)     //glue pattern的跨度不受规则最大跨度RULE_LEN_MAX的限制，可以延伸到句尾
 		{
-			Rule rule;
-			rule.src_ids = ids_X1X2;
-			rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
-			rule.tgt_rule_rank = 0;
-			rule.span_x1 = make_pair(0,len_X1);
-			rule.span_x2 = make_pair(len_X1+1,len_X1X2-len_X1-1);
-			span2rules.at(0).at(len_X1X2).push_back(rule);
+			for (int len_X1=0;len_X1<len_X1X2;len_X1++)
+			{
+				Rule rule;
+				rule.src_ids = ids_X1X2;
+				rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
+				rule.tgt_rule_rank = beg_X1X2;
+				rule.span_x1 = make_pair(beg_X1X2,len_X1);
+				rule.span_x2 = make_pair(len_X1+1,len_X1X2-len_X1-1);
+				span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
+			}
 		}
 	}
 }

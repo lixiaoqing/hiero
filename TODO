@@ -10,3 +10,4 @@ find hiero rules for each span before decoding                                  
 prevent duplicate expanding during cube prunning 												  checked
 check boundary index for each rule pattern 														  checked
 calculate log prob when converting rule table to bin 											  checked
+function words can be generalized in syntax phrase
