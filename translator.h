@@ -35,6 +35,7 @@ class SentenceTranslator
 		void add_neighbours_to_pq(Cand *cur_cand, Candpq &new_cands_by_mergence);
 		void dump_rules(vector<string> &applied_rules, Cand *cand);
 		string words_to_str(vector<int> wids, int drop_oov);
+		bool is_only_function_words_in_span(int beg_X,int len_X);
 
 	private:
 		Vocab *src_vocab;
