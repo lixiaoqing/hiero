@@ -358,6 +358,34 @@ void SentenceTranslator::fill_span2rules_with_glue_rule()
 	}
 }
 
+void SentenceTranslator::fill_span2rules_with_additional_glue_rule()
+{
+	vector<int> ids_X1X2 = {src_nt_id,src_nt_id};
+	vector<vector<TgtRule>* > matched_rules_for_prefixes = ruletable->find_matched_rules_for_prefixes(ids_X1X2,0);
+	//assert(matched_rules_for_prefixes.size() == 2 && matched_rules_for_prefixes.back() != NULL);
+	for (int beg_X1X2=0;beg_X1X2+1<src_sen_len;beg_X1X2++)				  //使用不以句首为起始位置的glue规则
+	{
+		for (int len_X1X2=1;beg_X1X2+len_X1X2<src_sen_len;len_X1X2++)     //glue pattern的跨度不受规则最大跨度RULE_LEN_MAX的限制，可以延伸到句尾
+		{
+			for (int len_X1=0;len_X1<len_X1X2;len_X1++)
+			{
+				Rule rule;
+				rule.src_ids = ids_X1X2;
+				rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
+				rule.tgt_rule_rank = 0;
+				rule.span_x1 = make_pair(beg_X1X2,len_X1);
+				if (is_only_function_words_in_span(beg_X1X2,len_X1))		//遇到虚词，跳过
+					continue;
+				rule.span_x2 = make_pair(beg_X1X2+len_X1+1,len_X1X2-len_X1-1);
+				if (is_only_function_words_in_span(beg_X1X2+len_X1+1,len_X1X2-len_X1-1))		//遇到虚词，跳过
+				{
+					span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
+				}
+			}
+		}
+	}
+}
+
 /**************************************************************************************
  1. 函数功能: 对给定的pattern以及该pattern对应的span，将匹配到的规则加入span2rules中
  2. 入口参数: 无
@@ -551,7 +579,18 @@ string SentenceTranslator::translate_sentence()
 		}
 	}
 	if (span2cands.at(0).at(src_sen_len-1).size() == 0)
-		return "";
+	{
+		fill_span2rules_with_additional_glue_rule();
+		for (size_t span=1;span<src_sen_len;span++)
+		{
+#pragma omp parallel for num_threads(para.SPAN_THREAD_NUM)
+			for(size_t beg=0;beg<src_sen_len-span;beg++)
+			{
+				generate_kbest_for_span(beg,span);
+				span2cands.at(beg).at(span).sort();
+			}
+		}
+	}
 	return words_to_str(span2cands.at(0).at(src_sen_len-1).top()->tgt_wids,para.DROP_OOV);
 }
 
