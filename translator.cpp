@@ -347,7 +347,11 @@ void SentenceTranslator::fill_span2rules_with_glue_rule()
 				rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
 				rule.tgt_rule_rank = 0;
 				rule.span_x1 = make_pair(beg_X1X2,len_X1);
+				if (is_only_function_words_in_span(beg_X1X2,len_X1))		//遇到虚词，跳过
+					continue;
 				rule.span_x2 = make_pair(beg_X1X2+len_X1+1,len_X1X2-len_X1-1);
+				if (is_only_function_words_in_span(beg_X1X2+len_X1+1,len_X1X2-len_X1-1))		//遇到虚词，跳过
+					continue;
 				span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
 			}
 		}
@@ -437,6 +441,8 @@ vector<TuneInfo> SentenceTranslator::get_tune_info(size_t sen_id)
 vector<string> SentenceTranslator::get_applied_rules(size_t sen_id)
 {
 	vector<string> applied_rules;
+	if (span2cands.at(0).at(src_sen_len-1).size() == 0)
+		return applied_rules;
 	Cand *best_cand = span2cands.at(0).at(src_sen_len-1).top();
 	dump_rules(applied_rules,best_cand);
 	applied_rules.push_back(" ||||| ");
@@ -544,6 +550,8 @@ string SentenceTranslator::translate_sentence()
 			span2cands.at(beg).at(span).sort();
 		}
 	}
+	if (span2cands.at(0).at(src_sen_len-1).size() == 0)
+		return "";
 	return words_to_str(span2cands.at(0).at(src_sen_len-1).top()->tgt_wids,para.DROP_OOV);
 }
 
