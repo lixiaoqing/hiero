@@ -25,7 +25,7 @@ LanguageModel::LanguageModel(const string &lm_file, Vocab *tgt_vocab)
 	kenlm = new Model(lm_file.c_str(), conf);
 	EOS = convert_to_kenlm_id(tgt_vocab->get_id("</s>"));
 	nonterminal_wid = tgt_vocab->get_id("[X][X]");
-	cout<<"load language model file "<<lm_file<<" over\n";
+	cerr<<"load language model file "<<lm_file<<" over\n";
 };
 
 lm::WordIndex LanguageModel::convert_to_kenlm_id(int wid)
