@@ -139,8 +139,6 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 					for (int len_X=0;len_X<beg_A && len_X+len_A+2<=SPAN_LEN_MAX;len_X++)
 					{
 						int beg_X = beg_A - len_X - 1;
-						if (is_only_function_words_in_span(beg_X,len_X))		//遇到虚词，跳过
-							continue;
 						pair<int,int> span = make_pair(beg_X,len_X+len_A+1);
 						pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 						pair<int,int> span_src_x2 = make_pair(-1,-1);
@@ -160,8 +158,6 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 					for (int len_X=0;beg_A+len_A+1+len_X<src_sen_len && len_A+len_X+2<=SPAN_LEN_MAX;len_X++)
 					{
 						int beg_X = beg_A + len_A + 1;
-						if (is_only_function_words_in_span(beg_X,len_X))		//遇到虚词，跳过
-							continue;
 						pair<int,int> span = make_pair(beg_A,len_A+len_X+1);
 						pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 						pair<int,int> span_src_x2 = make_pair(-1,-1);
@@ -182,13 +178,9 @@ void SentenceTranslator::fill_span2rules_with_AX_XA_XAX_rule()
 					for (int len_X1=0;len_X1<beg_A && len_X1+len_A+2<=SPAN_LEN_MAX-1;len_X1++)
 					{
 						int beg_X1 = beg_A - len_X1 - 1;
-						if (is_only_function_words_in_span(beg_X1,len_X1))		//遇到虚词，跳过
-							continue;
 						for (int len_X2=0;beg_A+len_A+1+len_X2<src_sen_len && len_X1+len_A+len_X2<=SPAN_LEN_MAX;len_X2++)
 						{
 							int beg_X2 = beg_A + len_A + 1;
-							if (is_only_function_words_in_span(beg_X2,len_X2))		//遇到虚词，跳过
-								continue;
 							pair<int,int> span = make_pair(beg_X1,len_X1+len_A+len_X2+2);
 							pair<int,int> span_src_x1 = make_pair(beg_X1,len_X1);
 							pair<int,int> span_src_x2 = make_pair(beg_X2,len_X2);
@@ -217,8 +209,6 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 			{
 				for (int len_X=0;beg_X+len_X<beg_AXB+len_AXB;len_X++)
 				{
-					if (is_only_function_words_in_span(beg_X,len_X))		//遇到虚词，跳过
-						continue;
 					vector<int> ids_AXB(src_wids.begin()+beg_AXB,src_wids.begin()+beg_X);
 					ids_AXB.push_back(src_nt_id);
 					ids_AXB.insert(ids_AXB.end(),src_wids.begin()+beg_X+len_X+1,src_wids.begin()+beg_AXB+len_AXB+1);
@@ -234,8 +224,6 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 							for (int len_X1=0;len_X1<beg_AXB && len_X1+len_AXB+2<=SPAN_LEN_MAX;len_X1++)
 							{
 								int beg_X1 = beg_AXB - len_X1 - 1;
-								if (is_only_function_words_in_span(beg_X1,len_X1))		//遇到虚词，跳过
-									continue;
 								pair<int,int> span = make_pair(beg_X1,len_X1+len_AXB+1);
 								pair<int,int> span_src_x1 = make_pair(beg_X1,len_X1);
 								pair<int,int> span_src_x2 = make_pair(beg_X,len_X);
@@ -255,8 +243,6 @@ void SentenceTranslator::fill_span2rules_with_AXB_AXBX_XAXB_rule()
 							for (int len_X2=0;beg_AXB+len_AXB+1+len_X2<src_sen_len && len_AXB+len_X2+2<=SPAN_LEN_MAX;len_X2++)
 							{
 								int beg_X2 = beg_AXB + len_AXB + 1;
-								if (is_only_function_words_in_span(beg_X2,len_X2))		//遇到虚词，跳过
-									continue;
 								pair<int,int> span = make_pair(beg_AXB,len_AXB+len_X2+1);
 								pair<int,int> span_src_x1 = make_pair(beg_X,len_X);
 								pair<int,int> span_src_x2 = make_pair(beg_X2,len_X2);
@@ -297,12 +283,8 @@ void SentenceTranslator::fill_span2rules_with_AXBXC_rule()
 				{
 					for (int beg_B=beg_XBX+1;beg_B<beg_XBX+len_XBX;beg_B++)
 					{
-						if (is_only_function_words_in_span(beg_XBX,beg_B-beg_XBX-1))		//遇到虚词，跳过
-							continue;
 						for (int len_B=len_XBX+beg_XBX-beg_B-1;len_B>=0;len_B--)
 						{
-							if (is_only_function_words_in_span(beg_B+len_B+1,len_XBX-len_B-(beg_B-beg_XBX-1)-2))		//遇到虚词，跳过
-								continue;
 							//抽取形如AXBXC的pattern
 							vector<int> ids_AXBXC(src_wids.begin()+beg_AXBXC,src_wids.begin()+beg_XBX);
 							ids_AXBXC.push_back(src_nt_id);
@@ -347,40 +329,12 @@ void SentenceTranslator::fill_span2rules_with_glue_rule()
 				rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
 				rule.tgt_rule_rank = 0;
 				rule.span_x1 = make_pair(beg_X1X2,len_X1);
-				if (is_only_function_words_in_span(beg_X1X2,len_X1))		//遇到虚词，跳过
-					continue;
 				rule.span_x2 = make_pair(beg_X1X2+len_X1+1,len_X1X2-len_X1-1);
-				if (is_only_function_words_in_span(beg_X1X2+len_X1+1,len_X1X2-len_X1-1))		//遇到虚词，跳过
-					continue;
-				span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
-			}
-		}
-	}
-}
-
-void SentenceTranslator::fill_span2rules_with_additional_glue_rule()
-{
-	vector<int> ids_X1X2 = {src_nt_id,src_nt_id};
-	vector<vector<TgtRule>* > matched_rules_for_prefixes = ruletable->find_matched_rules_for_prefixes(ids_X1X2,0);
-	//assert(matched_rules_for_prefixes.size() == 2 && matched_rules_for_prefixes.back() != NULL);
-	for (int beg_X1X2=0;beg_X1X2+1<src_sen_len;beg_X1X2++)				  //使用不以句首为起始位置的glue规则
-	{
-		for (int len_X1X2=1;beg_X1X2+len_X1X2<src_sen_len;len_X1X2++)     //glue pattern的跨度不受规则最大跨度RULE_LEN_MAX的限制，可以延伸到句尾
-		{
-			for (int len_X1=0;len_X1<len_X1X2;len_X1++)
-			{
-				Rule rule;
-				rule.src_ids = ids_X1X2;
-				rule.tgt_rule = &((*matched_rules_for_prefixes.back()).at(0));
-				rule.tgt_rule_rank = 0;
-				rule.span_x1 = make_pair(beg_X1X2,len_X1);
-				if (is_only_function_words_in_span(beg_X1X2,len_X1))		//遇到虚词，跳过
-					continue;
-				rule.span_x2 = make_pair(beg_X1X2+len_X1+1,len_X1X2-len_X1-1);
-				if (is_only_function_words_in_span(beg_X1X2+len_X1+1,len_X1X2-len_X1-1))		//遇到虚词，跳过
+				if (is_only_function_words_in_span(rule.span_x1) || is_only_function_words_in_span(rule.span_x2))
 				{
-					span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
+					rule.generalize_fw_flag = 1;
 				}
+				span2rules.at(beg_X1X2).at(len_X1X2).push_back(rule);
 			}
 		}
 	}
@@ -394,9 +348,15 @@ void SentenceTranslator::fill_span2rules_with_additional_glue_rule()
 ************************************************************************************* */
 void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &matched_rules,vector<int> &src_ids,pair<int,int> span,pair<int,int> span_src_x1,pair<int,int> span_src_x2)
 {
+	int flag = 0;
+	if (is_only_function_words_in_span(span_src_x1) || is_only_function_words_in_span(span_src_x2) )
+	{
+		flag = 1;
+	}
 	for (int i=0;i<matched_rules.size();i++)
 	{
 		Rule rule;
+		rule.generalize_fw_flag = flag;
 		rule.src_ids = src_ids;
 		rule.tgt_rule = &matched_rules.at(i);
 		rule.tgt_rule_rank = i;
@@ -412,12 +372,13 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 		}
 		span2rules.at(span.first).at(span.second).push_back(rule);
 	}
-
 }
 
-bool SentenceTranslator::is_only_function_words_in_span(int beg_X,int len_X)
+bool SentenceTranslator::is_only_function_words_in_span(pair<int,int> span_X)
 {
-	for (int i=beg_X;i<=beg_X+len_X;i++)
+	if (span_X.first == -1)
+		return false;
+	for (int i=span_X.first;i<=span_X.first+span_X.second;i++)
 	{
 		if (src_function_words->find(src_wids.at(i)) == src_function_words->end())
 			return false;
@@ -460,6 +421,7 @@ vector<TuneInfo> SentenceTranslator::get_tune_info(size_t sen_id)
 		tune_info.feature_values.push_back(candbeam.at(i)->tgt_word_num);
 		tune_info.feature_values.push_back(candbeam.at(i)->rule_num);
 		tune_info.feature_values.push_back(candbeam.at(i)->glue_num);
+		tune_info.feature_values.push_back(candbeam.at(i)->generalize_fw_num);
 		tune_info.total_score = candbeam.at(i)->score;
 		nbest_tune_info.push_back(tune_info);
 	}
@@ -578,19 +540,6 @@ string SentenceTranslator::translate_sentence()
 			span2cands.at(beg).at(span).sort();
 		}
 	}
-	if (span2cands.at(0).at(src_sen_len-1).size() == 0)
-	{
-		fill_span2rules_with_additional_glue_rule();
-		for (size_t span=1;span<src_sen_len;span++)
-		{
-#pragma omp parallel for num_threads(para.SPAN_THREAD_NUM)
-			for(size_t beg=0;beg<src_sen_len-span;beg++)
-			{
-				generate_kbest_for_span(beg,span);
-				span2cands.at(beg).at(span).sort();
-			}
-		}
-	}
 	return words_to_str(span2cands.at(0).at(src_sen_len-1).top()->tgt_wids,para.DROP_OOV);
 }
 
@@ -654,7 +603,7 @@ void SentenceTranslator::generate_kbest_for_span(const size_t beg,const size_t s
 ************************************************************************************* */
 void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int rank_x1,int rank_x2,Candpq &candpq_merge)
 {
-	if (rule.tgt_rule->rule_type >= 2)                                                                      //该规则有两个非终结符
+	if (rule.tgt_rule->rule_type >= 2)                                                                 //该规则有两个非终结符
 	{
 		if (span2cands.at(rule.span_x1.first).at(rule.span_x1.second).size() <= rank_x1 ||
 			span2cands.at(rule.span_x2.first).at(rule.span_x2.second).size() <= rank_x2)               //子候选不够用
@@ -663,6 +612,7 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		Cand *cand_x2 = span2cands.at(rule.span_x2.first).at(rule.span_x2.second).at(rank_x2);
 		Cand* cand = new Cand;
 		cand->applied_rule = rule;
+		cand->generalize_fw_num = cand_x1->generalize_fw_num + cand_x2->generalize_fw_num + rule.generalize_fw_flag;
 		if (rule.tgt_rule->rule_type == 4)  //glue规则
 		{
 			cand->rule_num = cand_x1->rule_num + cand_x2->rule_num;
@@ -707,12 +657,14 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		if (rule.tgt_rule->rule_type == 4)  //glue规则
 		{
 			cand->score = cand_x1->score + cand_x2->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
-					  + feature_weight.glue*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2);
+					  + feature_weight.glue*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2)
+					  + feature_weight.fw*rule.generalize_fw_flag;
 		}
 		else
 		{
 			cand->score = cand_x1->score + cand_x2->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
-					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2);
+					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2)
+					  + feature_weight.fw*rule.generalize_fw_flag;
 		}
 		candpq_merge.push(cand);
 	}
@@ -723,6 +675,7 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		Cand *cand_x1 = span2cands.at(rule.span_x1.first).at(rule.span_x1.second).at(rank_x1);
 		Cand* cand = new Cand;
 		cand->applied_rule = rule;
+		cand->generalize_fw_num = cand_x1->generalize_fw_num + rule.generalize_fw_flag;
 		cand->rule_num = cand_x1->rule_num + 1;
 		cand->glue_num = cand_x1->glue_num;
 		cand->rank_x1 = rank_x1;
@@ -748,7 +701,8 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		double increased_lm_prob = lm_model->cal_increased_lm_score(cand);
 		cand->lm_prob = cand_x1->lm_prob + increased_lm_prob;
 		cand->score = cand_x1->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
-					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 1);
+					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 1)
+					  + feature_weight.fw*rule.generalize_fw_flag;
 		candpq_merge.push(cand);
 	}
 }

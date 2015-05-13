@@ -29,14 +29,13 @@ class SentenceTranslator
 		void fill_span2rules_with_AXB_AXBX_XAXB_rule();
 		void fill_span2rules_with_AXBXC_rule();
 		void fill_span2rules_with_glue_rule();
-		void fill_span2rules_with_additional_glue_rule();
 		void fill_span2rules_with_matched_rules(vector<TgtRule> &matched_rules,vector<int> &src_ids,pair<int,int> span,pair<int,int> span_src_x1,pair<int,int> span_src_x2);
 		void generate_kbest_for_span(const size_t beg,const size_t span);
 		void generate_cand_with_rule_and_add_to_pq(Rule &rule,int rank_x1,int rank_x2,Candpq &new_cands_by_mergence);
 		void add_neighbours_to_pq(Cand *cur_cand, Candpq &new_cands_by_mergence);
 		void dump_rules(vector<string> &applied_rules, Cand *cand);
 		string words_to_str(vector<int> wids, int drop_oov);
-		bool is_only_function_words_in_span(int beg_X,int len_X);
+		bool is_only_function_words_in_span(pair<int,int> span_X);
 
 	private:
 		Vocab *src_vocab;

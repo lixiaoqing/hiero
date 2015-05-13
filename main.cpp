@@ -129,6 +129,10 @@ void read_config(Filenames &fns,Parameter &para, Weight &weight, const string &c
 				{
 					ss>>weight.glue;
 				}
+				else if(feature == "fw")
+				{
+					ss>>weight.fw;
+				}
 			}
 		}
 	}

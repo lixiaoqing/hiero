@@ -76,6 +76,7 @@ struct Weight
 	double len;							//译文的单词数
 	double rule_num;					//使用的规则数，不包含glue规则
 	double glue;						//对glue规则的惩罚
+	double fw;							//对泛化虚词的规则的惩罚
 };
 
 #endif
