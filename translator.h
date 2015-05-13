@@ -51,6 +51,8 @@ class SentenceTranslator
 		vector<vector<vector<Rule> > > span2rules;	    //存储每个跨度所有能用的hiero规则
 
 		vector<int> src_wids;
+		vector<int> verb_flags;
+		vector<int> fw_flags;
 		size_t src_sen_len;
 		int src_nt_id;                                  //源端非终结符的id
 		int tgt_nt_id; 									//目标端非终结符的id

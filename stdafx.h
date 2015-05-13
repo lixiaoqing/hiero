@@ -77,6 +77,7 @@ struct Weight
 	double rule_num;					//使用的规则数，不包含glue规则
 	double glue;						//对glue规则的惩罚
 	double fw;							//对泛化虚词的规则的惩罚
+	double fwverb;						//对终结符只包含虚词和动词的规则的奖励
 };
 
 #endif

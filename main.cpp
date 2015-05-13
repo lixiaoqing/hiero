@@ -133,6 +133,10 @@ void read_config(Filenames &fns,Parameter &para, Weight &weight, const string &c
 				{
 					ss>>weight.fw;
 				}
+				else if(feature == "fwverb")
+				{
+					ss>>weight.fwverb;
+				}
 			}
 		}
 	}
