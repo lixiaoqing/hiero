@@ -12,46 +12,123 @@ SentenceTranslator::SentenceTranslator(const Models &i_models, const Parameter &
 
 	src_nt_id = src_vocab->get_id("[X][X]");
 	tgt_nt_id = tgt_vocab->get_id("[X][X]");
-	stringstream ss(input_sen);
-	string word_tag;
-	while(ss>>word_tag)
-	{
-		int sep = word_tag.find("#");
-		string word = word_tag.substr(0,sep);
-		src_wids.push_back(src_vocab->get_id(word));
-		if (word_tag.at(sep+1) == 'V')
-		{
-			verb_flags.push_back(1);
-		}
-		else
-		{
-			verb_flags.push_back(0);
-		}
-		if (src_function_words->find(src_wids.back()) != src_function_words->end())
-		{
-			fw_flags.push_back(1);
-		}
-		else
-		{
-			fw_flags.push_back(0);
-		}
-	}
-
+	build_tree_from_str(input_sen);
 	src_sen_len = src_wids.size();
+	span_to_node_flag.resize(src_sen_len);
 	span2cands.resize(src_sen_len);
 	span2rules.resize(src_sen_len);
 	for (size_t beg=0;beg<src_sen_len;beg++)
 	{
+		span_to_node_flag.at(beg).resize(src_sen_len-beg,false);
 		span2cands.at(beg).resize(src_sen_len-beg);
 		span2rules.at(beg).resize(src_sen_len-beg);
 	}
+	cal_span_for_each_node(root);
 
 	fill_span2cands_with_phrase_rules();
 	fill_span2rules_with_hiero_rules();
 }
 
+/**************************************************************************************
+ 1. 函数功能: 将字符串解析成句法树
+ 2. 入口参数: 一句话的句法分析结果，Berkeley Parser格式
+ 3. 出口参数: 无
+ 4. 算法简介: 见注释
+************************************************************************************* */
+void SentenceTranslator::build_tree_from_str(const string &line_tree)
+{
+	vector<string> toks;
+   	Split(toks,line_tree);
+	SyntaxNode* cur_node;
+	SyntaxNode* pre_node;
+	int word_index = 0;
+	for(size_t i=0;i<toks.size();i++)
+	{
+		//左括号情形，且去除"("作为终结符的特例(做终结符时，后继为“）”)
+		if(toks[i]=="(" && i+1<toks.size() && toks[i+1]!=")")
+		{
+			string test=toks[i];
+			if(i == 0)
+			{
+				root     = new SyntaxNode;
+				pre_node = root;
+				cur_node = root;
+			}
+			else
+			{
+				cur_node = new SyntaxNode;
+				cur_node->father = pre_node;
+				pre_node->children.push_back(cur_node);
+				pre_node = cur_node;
+			}
+		}
+		//右括号情形，去除右括号“）”做终结符的特例（做终结符时，前驱的前驱为“（,而且前驱不是")"
+		else if(toks[i]==")" && !(i-2>=0 && toks[i-2] =="(" && toks[i-1] != ")"))
+		{
+			pre_node = pre_node->father;
+			cur_node = pre_node;
+		}
+		//处理形如 （ VV 需要 ）其中VV节点这样的情形
+		else if((i-1>=0 && toks[i-1]=="(") && (i+2<toks.size() && toks[i+2]==")"))
+		{
+			cur_node->label  = toks[i];
+			cur_node         = new SyntaxNode;
+			cur_node->father = pre_node;
+			pre_node->children.push_back(cur_node);
+			if (toks[i][0] == 'V')
+			{
+				verb_flags.push_back(1);
+			}
+			else
+			{
+				verb_flags.push_back(0);
+			}
+		}
+		//处理形如 VP （ VV 需要 ） VP这样的节点 或 需要 这样的节点
+		else
+		{
+			cur_node->label = toks[i];
+			//如果是“需要”的情形，则记录中文词的序号
+			if(toks[i+1]==")")
+			{
+				cur_node->span = make_pair(word_index,0);
+				src_wids.push_back(src_vocab->get_id(toks[i]));
+				if (src_function_words->find(src_wids.back()) != src_function_words->end())
+				{
+					fw_flags.push_back(1);
+				}
+				else
+				{
+					fw_flags.push_back(0);
+				}
+				word_index++;
+			}
+		}
+	}
+}
+
+/**************************************************************************************
+ 1. 函数功能: 计算当前子树中的每个节点的span
+ 2. 入口参数: 当前子树的根节点
+ 3. 出口参数: 无
+ 4. 算法简介: 后序遍历当前子树，根据第一个和最后一个孩子节点的span计算当前节点的span
+************************************************************************************* */
+void SentenceTranslator::cal_span_for_each_node(SyntaxNode* node)
+{
+	if (node->children.empty() )                                                                            //单词节点
+		return;
+	for (const auto child : node->children)
+	{
+		cal_span_for_each_node(child);
+	}
+	node->span = make_pair(node->children.front()->span.first,node->children.back()->span.first+
+				 node->children.back()->span.second - node->children.front()->span.first);
+	span_to_node_flag[node->span.first][node->span.second] = true;											//更新每个span是否有句法节点
+}
+
 SentenceTranslator::~SentenceTranslator()
 {
+	delete root;
 	for (size_t i=0;i<span2cands.size();i++)
 	{
 		for(size_t j=0;j<span2cands.at(i).size();j++)
@@ -373,6 +450,14 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 		fw_flag = 1;
 	}
 	int fwverb_flag = 1;
+	if (span_to_node_flag[span.first][span.second] == false || span_to_node_flag[span_src_x1.first][span_src_x1.second] == false)
+	{
+		fwverb_flag = 0;
+	}
+	if (span_src_x2.first != -1 && span_to_node_flag[span_src_x2.first][span_src_x2.second] == false)
+	{
+		fwverb_flag = 0;
+	}
 	int x1_lhs = span_src_x1.first-1;
 	int x1_rhs = span_src_x1.first+span_src_x1.second+1;
 	int x2_lhs = span_src_x2.first-1;
