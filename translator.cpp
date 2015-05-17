@@ -336,7 +336,8 @@ void SentenceTranslator::fill_span2rules_with_glue_rule()
 	vector<int> ids_X1X2 = {src_nt_id,src_nt_id};
 	vector<vector<TgtRule>* > matched_rules_for_prefixes = ruletable->find_matched_rules_for_prefixes(ids_X1X2,0);
 	//assert(matched_rules_for_prefixes.size() == 2 && matched_rules_for_prefixes.back() != NULL);
-	for (int beg_X1X2=0;beg_X1X2+1<src_sen_len;beg_X1X2++)				  //使用不以句首为起始位置的glue规则
+	//for (int beg_X1X2=0;beg_X1X2+1<src_sen_len;beg_X1X2++)				  //使用不以句首为起始位置的glue规则
+	int beg_X1X2 = 0;
 	{
 		for (int len_X1X2=1;beg_X1X2+len_X1X2<src_sen_len;len_X1X2++)     //glue pattern的跨度不受规则最大跨度RULE_LEN_MAX的限制，可以延伸到句尾
 		{
@@ -372,7 +373,31 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 		fw_flag = 1;
 	}
 	int fwverb_flag = 1;
-	for (int i=span.first;i<=span.second;i++)
+	int x1_lhs = span_src_x1.first-1;
+	int x1_rhs = span_src_x1.first+span_src_x1.second+1;
+	int x2_lhs = span_src_x2.first-1;
+	int x2_rhs = span_src_x2.first+span_src_x2.second+1;
+	if (x1_lhs>=span.first && verb_flags.at(x1_lhs)==0 && fw_flags.at(x1_lhs)==0 )
+	{
+		fwverb_flag = 0;
+	}
+	if (x1_rhs<=span.first+span.second && verb_flags.at(x1_rhs)==0 && fw_flags.at(x1_rhs)==0 )
+	{
+		fwverb_flag = 0;
+	}
+	if (span_src_x2.first != -1)
+	{
+		if (x2_lhs>=span.first && verb_flags.at(x2_lhs)==0 && fw_flags.at(x2_lhs)==0 )
+		{
+			fwverb_flag = 0;
+		}
+		if (x2_rhs<=span.first+span.second && verb_flags.at(x2_rhs)==0 && fw_flags.at(x2_rhs)==0 )
+		{
+			fwverb_flag = 0;
+		}
+	}
+	/*
+	for (int i=span.first;i<=span.first+span.second;i++)
 	{
 		if (i>=span_src_x1.first && i<=span_src_x1.first+span_src_x1.second)
 			continue;
@@ -384,6 +409,7 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 			break;
 		}
 	}
+	*/
 	for (int i=0;i<matched_rules.size();i++)
 	{
 		Rule rule;
@@ -540,6 +566,8 @@ void SentenceTranslator::dump_rules(vector<string> &applied_rules, Cand *cand)
 			}
 		}
 	}
+	rule += to_string(cand->applied_rule.generalize_fw_flag)+"_";
+	rule += to_string(cand->applied_rule.fwverb_terminal_flag)+"_";
 	rule.erase(rule.end()-1);
 	applied_rules.push_back(rule);
 	if (children[0] != NULL)
