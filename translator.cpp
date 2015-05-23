@@ -70,11 +70,15 @@ void SentenceTranslator::fill_span2cands_with_phrase_rules()
 				{
 					Cand* cand = new Cand;
 					cand->tgt_wids.push_back(0 - src_wids.at(beg));
-					cand->trans_probs.resize(PROB_NUM,0.0);
+					cand->trans_probs.resize(PROB_NUM,LogP_PseudoZero);
+					for (int i=0;i<PROB_NUM;i++)
+					{
+						cand->score += feature_weight.trans.at(i)*cand->trans_probs.at(i);
+					}
 					cand->applied_rule.src_ids.push_back(src_wids.at(beg));
-					lm_model->cal_increased_lm_score(cand);
-					cand->lm_prob = 0.0;
-					cand->score += feature_weight.rule_num*cand->rule_num + feature_weight.len*cand->tgt_word_num;
+					cand->lm_prob = lm_model->cal_increased_lm_score(cand);
+					cand->score += feature_weight.rule_num*cand->rule_num 
+								+ feature_weight.len*cand->tgt_word_num + feature_weight.lm*cand->lm_prob;
 					span2cands.at(beg).at(span).add(cand,para.BEAM_SIZE);
 				}
 				continue;
@@ -406,7 +410,11 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 		Rule rule;
 		rule.generalize_fw_flag = fw_flag;
 		rule.fwverb_terminal_flag = fwverb_flag;
-		rule.noun_terminal_flag = noun_flag;
+		rule.noun_terminal_flag = 0;
+		if (matched_rules.at(i).rule_type >= 2)
+		{
+			rule.noun_terminal_flag = noun_flag;
+		}
 		rule.src_ids = src_ids;
 		rule.tgt_rule = &matched_rules.at(i);
 		rule.tgt_rule_rank = i;
