@@ -19,22 +19,9 @@ SentenceTranslator::SentenceTranslator(const Models &i_models, const Parameter &
 		int sep = word_tag.find("#");
 		string word = word_tag.substr(0,sep);
 		src_wids.push_back(src_vocab->get_id(word));
-		if (word_tag.at(sep+1) == 'V')
-		{
-			verb_flags.push_back(1);
-		}
-		else
-		{
-			verb_flags.push_back(0);
-		}
-		if (src_function_words->find(src_wids.back()) != src_function_words->end())
-		{
-			fw_flags.push_back(1);
-		}
-		else
-		{
-			fw_flags.push_back(0);
-		}
+		verb_flags.push_back(word_tag.at(sep+1)=='V'?1:0);
+		noun_flags.push_back(word_tag.at(sep+1)=='N'?1:0);
+		fw_flags.push_back(src_function_words->find(src_wids.back())!=src_function_words->end()?1:0);
 	}
 
 	src_sen_len = src_wids.size();
@@ -369,6 +356,8 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 		fw_flag = 1;
 	}
 	int fwverb_flag = 1;
+	int noun_flag = 1;
+	/*
 	int x1_lhs = span_src_x1.first-1;
 	int x1_rhs = span_src_x1.first+span_src_x1.second+1;
 	int x2_lhs = span_src_x2.first-1;
@@ -392,7 +381,7 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 			fwverb_flag = 0;
 		}
 	}
-	/*
+	*/
 	for (int i=span.first;i<=span.first+span.second;i++)
 	{
 		if (i>=span_src_x1.first && i<=span_src_x1.first+span_src_x1.second)
@@ -401,16 +390,23 @@ void SentenceTranslator::fill_span2rules_with_matched_rules(vector<TgtRule> &mat
 			continue;
 		if (verb_flags.at(i) == 0 && fw_flags.at(i) == 0)
 		{
-			fwverb_flag = 0;
-			break;
+			if (i==span_src_x1.first-1 || i==span_src_x1.first+span_src_x1.second+1
+				||i==span_src_x2.first-1 || i==span_src_x2.first+span_src_x2.second+1)
+			{
+				fwverb_flag = 0;
+			}
+		}
+		if (noun_flags.at(i) == 0)
+		{
+			noun_flag = 0;
 		}
 	}
-	*/
 	for (int i=0;i<matched_rules.size();i++)
 	{
 		Rule rule;
 		rule.generalize_fw_flag = fw_flag;
 		rule.fwverb_terminal_flag = fwverb_flag;
+		rule.noun_terminal_flag = noun_flag;
 		rule.src_ids = src_ids;
 		rule.tgt_rule = &matched_rules.at(i);
 		rule.tgt_rule_rank = i;
@@ -477,6 +473,7 @@ vector<TuneInfo> SentenceTranslator::get_tune_info(size_t sen_id)
 		tune_info.feature_values.push_back(candbeam.at(i)->glue_num);
 		tune_info.feature_values.push_back(candbeam.at(i)->generalize_fw_num);
 		tune_info.feature_values.push_back(candbeam.at(i)->fwverb_terminal_num);
+		tune_info.feature_values.push_back(candbeam.at(i)->noun_terminal_num);
 		tune_info.total_score = candbeam.at(i)->score;
 		nbest_tune_info.push_back(tune_info);
 	}
@@ -564,6 +561,7 @@ void SentenceTranslator::dump_rules(vector<string> &applied_rules, Cand *cand)
 	}
 	rule += to_string(cand->applied_rule.generalize_fw_flag)+"_";
 	rule += to_string(cand->applied_rule.fwverb_terminal_flag)+"_";
+	rule += to_string(cand->applied_rule.noun_terminal_flag)+"_";
 	rule.erase(rule.end()-1);
 	applied_rules.push_back(rule);
 	if (children[0] != NULL)
@@ -671,6 +669,7 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		cand->applied_rule = rule;
 		cand->generalize_fw_num = cand_x1->generalize_fw_num + cand_x2->generalize_fw_num + rule.generalize_fw_flag;
 		cand->fwverb_terminal_num = cand_x1->fwverb_terminal_num + cand_x2->fwverb_terminal_num + rule.fwverb_terminal_flag;
+		cand->noun_terminal_num = cand_x1->noun_terminal_num + cand_x2->noun_terminal_num + rule.noun_terminal_flag;
 		if (rule.tgt_rule->rule_type == 4)  //glue规则
 		{
 			cand->rule_num = cand_x1->rule_num + cand_x2->rule_num;
@@ -716,13 +715,15 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		{
 			cand->score = cand_x1->score + cand_x2->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
 					  + feature_weight.glue*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2)
-					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag;
+					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag
+					  + feature_weight.noun*rule.noun_terminal_flag;
 		}
 		else
 		{
 			cand->score = cand_x1->score + cand_x2->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
 					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 2)
-					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag;
+					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag
+					  + feature_weight.noun*rule.noun_terminal_flag;
 		}
 		candpq_merge.push(cand);
 	}
@@ -735,6 +736,7 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		cand->applied_rule = rule;
 		cand->generalize_fw_num = cand_x1->generalize_fw_num + rule.generalize_fw_flag;
 		cand->fwverb_terminal_num = cand_x1->fwverb_terminal_num + rule.fwverb_terminal_flag;
+		cand->noun_terminal_num = cand_x1->noun_terminal_num + rule.noun_terminal_flag;
 		cand->rule_num = cand_x1->rule_num + 1;
 		cand->glue_num = cand_x1->glue_num;
 		cand->rank_x1 = rank_x1;
@@ -761,7 +763,8 @@ void SentenceTranslator::generate_cand_with_rule_and_add_to_pq(Rule &rule,int ra
 		cand->lm_prob = cand_x1->lm_prob + increased_lm_prob;
 		cand->score = cand_x1->score + rule.tgt_rule->score + feature_weight.lm*increased_lm_prob
 					  + feature_weight.rule_num*1 + feature_weight.len*(rule.tgt_rule->wids.size() - 1)
-					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag;
+					  + feature_weight.fw*rule.generalize_fw_flag + feature_weight.fwverb*rule.fwverb_terminal_flag
+					  + feature_weight.noun*rule.noun_terminal_flag;
 		candpq_merge.push(cand);
 	}
 }

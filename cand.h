@@ -14,6 +14,7 @@ struct Rule
 	int tgt_rule_rank;		  //该目标端在源端相同的所有目标端中的排名
 	int generalize_fw_flag;	  //该规则是否对虚词span进行了泛化
 	int fwverb_terminal_flag; //该规则的终结符是否只包含虚词和动词
+	int noun_terminal_flag;   //该规则的终结符是否只包含名词
 	Rule ()
 	{
 		span_x1 = make_pair(-1,-1);
@@ -22,6 +23,7 @@ struct Rule
 		tgt_rule_rank = 0;
 		generalize_fw_flag = 0;
 		fwverb_terminal_flag = 0;
+		noun_terminal_flag = 0;
 	}
 };
 
@@ -33,6 +35,7 @@ struct Cand
 	int glue_num;				//生成当前候选所使用的glue规则数目
 	int generalize_fw_num;		//生成当前候选所使用的泛化虚词的规则的数目
 	int fwverb_terminal_num;	//生成当前候选所使用的终结符只包含虚词和动词的规则的数目
+	int noun_terminal_num;		//生成当前候选所使用的终结符只包含名词的规则的数目
 
 	//目标端信息
 	int tgt_word_num;			//当前候选目标端的单词数
@@ -59,6 +62,7 @@ struct Cand
 		glue_num = 0;
 		generalize_fw_num = 0;
 		fwverb_terminal_num = 0;
+		noun_terminal_num = 0;
 
 		tgt_word_num = 1;
 		tgt_wids.clear();

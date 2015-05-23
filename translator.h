@@ -52,6 +52,7 @@ class SentenceTranslator
 
 		vector<int> src_wids;
 		vector<int> verb_flags;
+		vector<int> noun_flags;
 		vector<int> fw_flags;
 		size_t src_sen_len;
 		int src_nt_id;                                  //源端非终结符的id
