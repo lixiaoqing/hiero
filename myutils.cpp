@@ -1,6 +1,6 @@
 #include "myutils.h"
 
-void Split(vector <string> &vs,const string &s)
+void Split(vector <string> &vs, string &s)
 {
 	vs.clear();
 	stringstream ss;
@@ -10,7 +10,7 @@ void Split(vector <string> &vs,const string &s)
 		vs.push_back(e);
 }
 
-void Split(vector <string> &vs,const string &s, string &sep)
+void Split(vector <string> &vs, string &s, string &sep)
 {
 	int cur = 0,next;
 	next = s.find(sep);

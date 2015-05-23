@@ -58,6 +58,7 @@ struct Cand
 		rule_num = 1;
 		glue_num = 0;
 		generalize_fw_num = 0;
+		fwverb_terminal_num = 0;
 
 		tgt_word_num = 1;
 		tgt_wids.clear();
