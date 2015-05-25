@@ -137,10 +137,6 @@ void read_config(Filenames &fns,Parameter &para, Weight &weight, const string &c
 				{
 					ss>>weight.fwverb;
 				}
-				else if(feature == "noun")
-				{
-					ss>>weight.noun;
-				}
 			}
 		}
 	}
